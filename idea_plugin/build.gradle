@@ -29,6 +29,11 @@ ext {
 apply plugin: 'org.jetbrains.intellij'
 apply plugin: 'java'
 
+java{
+  sourceCompatibility = JavaVersion.VERSION_1_8
+  targetCompatibility = JavaVersion.VERSION_1_8
+}
+
 intellij {
   pluginName = "google-java-format"
   version = "193.4932.9-EAP-SNAPSHOT"
