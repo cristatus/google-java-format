@@ -1,0 +1,48 @@
+name: Build Eclipse plugin
+on: workflow_dispatch
+
+jobs:
+  build:
+    name: Build the Plugin
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          repository: cristatus/google-java-format
+          ref: fix-eclipse-build-ci
+          path: google-java-format
+      - name: Setup Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: Copy the dependences
+        working-directory: google-java-format/eclipse_plugin
+        run: mvn install
+      - name: Build the package
+        id: build-package
+        working-directory: google-java-format/eclipse_plugin
+        run: |
+          mvn clean package
+          JAR_FILE=$(realpath target/google-java-format-eclipse-plugin*.jar)
+          JAR_NAME=$(basename $JAR_FILE)
+          echo "::set-output name=jar_file::$JAR_FILE"
+          echo "::set-output name=jar_name::$JAR_NAME"
+      - name: Create draft release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: latest
+          draft: true
+          prerelease: false
+      - name: Upload draft release asset
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.build-package.outputs.jar_file }}
+          asset_name: ${{ steps.build-package.outputs.jar_name }}
+          asset_content_type: application/zip
