@@ -28,21 +28,26 @@ jobs:
           JAR_NAME=$(basename $JAR_FILE)
           echo "::set-output name=jar_file::$JAR_FILE"
           echo "::set-output name=jar_name::$JAR_NAME"
-      - name: Create draft release
+  publish:
+    name: Publish the Plugin
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - name: Create release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: latest
-          draft: true
+          draft: false
           prerelease: false
-      - name: Upload draft release asset
+      - name: Upload release asset
         uses: actions/upload-release-asset@v1.0.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ steps.build-package.outputs.jar_file }}
-          asset_name: ${{ steps.build-package.outputs.jar_name }}
+          asset_path: ${{ needs.build.steps.build-package.outputs.jar_file }}
+          asset_name: ${{ needs.build.steps.build-package.outputs.jar_name }}
           asset_content_type: application/zip
